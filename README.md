@@ -1,16 +1,11 @@
 # Exp-6b-Traffic-Light-Controller
-
 # Aim
-
 To design and simulate a Verilog HDL for Traffic Light Controler
 
 # Apparatus Required
-
 Vivado 2023.1
 Spartan 7 FPGA
-
 # Procedure
-
 1. Launch Vivado 2023.1
 Open Vivado 2023.1 and create a new project.
 Select RTL Project and enable Do not specify sources at this time.
@@ -22,82 +17,88 @@ Type the Verilog code for the Traffic Light Controler
 Observe the Traffic Signal output.
 
 # code
-```
+```verilog
 module traffic_light_controller(
     input clk, rst,
-    output reg [2:0] light  // {Red, Yellow, Green}
+    output reg [2:0] light
 );
+    parameter [1:0] RED = 2'b00, GREEN = 2'b01, YELLOW = 2'b10;
+    reg [1:0] state;
+    reg [3:0] count;
 
-    // State encoding
-  //  typedef enum reg [1:0] {RED=2'b00, GREEN=2'b01, YELLOW=2'b10} state_t;
- parameter [1:0]RED = 2'b00, GREEN=2'b01, YELLOW=2'b10 ;
- reg [1:0]state, next_state;  
- reg [3:0]count;
- // State register
     always @(posedge clk or posedge rst) begin
-        if(rst) begin
+        if (rst) begin
             state <= RED;
             count <= 0;
         end
         else begin
-            state <= next_state;
             count <= count + 1;
+            case (state)
+                RED: begin
+                    if (count == 3) begin
+                        state <= GREEN;
+                        count <= 0;
+                    end
+                end
+                GREEN: begin
+                    if (count == 5) begin
+                        state <= YELLOW;
+                        count <= 0;
+                    end
+                end
+                YELLOW: begin
+                    if (count == 1) begin
+                        state <= RED;
+                        count <= 0;
+                    end
+                end
+            endcase
         end
     end
-        always @(*) begin
-        next_state = state;
-        case(state)
-            RED: if(count==4) // 4 cycles Red
-                             next_state = GREEN; 
-            GREEN:  if(count==6) next_state = YELLOW;  // 6 cycles Green
-            YELLOW: if(count==2) next_state = RED;     // 2 cycles Yellow
-        endcase
-    end
 
-    // Output logic
     always @(*) begin
-        case(state)
-            RED:    light = 3'b001; // Red ON
-            GREEN:  light = 3'b010; // Green ON
-            YELLOW: light = 3'b100; // Yellow ON
-            default:light = 3'b000;
+        case (state)
+            RED: light = 3'b100;
+            YELLOW: light = 3'b010;
+            GREEN: light = 3'b001;
+            default: light = 3'b000;
         endcase
     end
-
 endmodule
 ```
 
 # Test Bench
-```
+```verilog
 module tb_traffic_light;
-    reg clk,rst;
+    reg clk, rst;
     wire [2:0] light;
 
-    traffic_light_controller uut(clk,rst,light);
-
-    // Clock generation
-    initial clk=0; always #5 clk=~clk;
+    traffic_light_controller uut (.clk(clk), .rst(rst), .light(light));
 
     initial begin
-        rst=1; #10; rst=0;
-        #200 $finish;   // run simulation for 200 time units
+        clk = 0;
+        forever #5 clk = ~clk;
     end
 
     initial begin
-        $monitor("Time=%0t | Lights={Red,Yellow,Green}=%b", $time, light);
+        rst = 1;
+        #10 rst = 0;
+        #300 $finish;
+    end
+
+    initial begin
+        $monitor("Time=%0t | Light={Red,Yellow,Green}=%b", $time, light);
     end
 endmodule
 ```
 
-# output
 
-<img width="1920" height="1080" alt="Screenshot 2025-10-23 224309" src="https://github.com/user-attachments/assets/a3e5dc0c-9c98-4cf3-853a-a3f8a82804e1" />
+# output
+<img width="1920" height="1200" alt="Screenshot (45)" src="https://github.com/user-attachments/assets/8c6e625a-b3fa-4a6b-af72-2094883806d0" />
 
 
 # Result
 
-The Verilog HDL code for the Traffic Light Controller was successfully designed, simulated, and verified using Vivado .
-
-
+The Verilog code for the Traffic Light Controller was designed and simulated successfully. The output verified correct traffic light operation.
 
 
